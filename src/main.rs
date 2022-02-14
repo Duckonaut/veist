@@ -1,52 +1,28 @@
-use std::{fs::File, io::Read};
-
-use reqwest::{self, Error};
-use serde_json::{self, Value};
+use api::client::send_get;
+use env_logger;
+use structopt::StructOpt;
 use tokio;
 
 mod api;
 
-const API_ROOT: &str = "https://www.bungie.net/Platform/";
+#[derive(Debug, StructOpt)]
+#[structopt(
+    name = "veist",
+    about = "Versatile External Item and Stat Tool for Destiny 2",
+    long_about = "Versatile External Item and Stat Tool for Destiny 2\n\n\x1b[0m 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV' ,V\x1b[92m VVVVVVVVVVV           ,VVVVVVVVVVVVV' \n\x1b[0m    'VVVVVVVVVVVVVVVVVVVVVVVVVVV' ,VVVV\x1b[92m VVVVVVVVVVV        ,VVVVVVVVVVVVV'    \n\x1b[0m       'VVVVVVVVVVVVVVVVVVVVV' ,VVVVVVV\x1b[92m VVVVVVVVVVV     ,VVVVVVVVVVVVV'       \n\x1b[0m          'VVVVVVVVVVVVVVV' ,VVVVVVVVVV\x1b[92m VVVVVVVVVVV  ,VVVVVVVVVVVVV'          \n\x1b[0m             'VVVVVVVVV' ,VVVVVVVVVVVVV\x1b[92m VVVVVVVVVVV,VVVVVVVVVVVV'             \n\x1b[0m                'VVV' ,VVVVVVVVVVVVVVVV\x1b[92m VVVVVVVVVVVVVVVVVVVVV'                \n\x1b[0m                    'VVVVVVVVVVVVVVVVVV\x1b[92m VVVVVVVVVVVVVVVVVV'                   \n\x1b[0m                      'VVVVVVVVVVVVVVVV\x1b[92m VVVVVVVVVVVVVVV'                      \n\x1b[0m                         'VVVVVVVVVVVVV\x1b[92m VVVVVVVVVVVV'                         \n\x1b[0m                            'VVVVVVVVVV\x1b[92m VVVVVVVVV'                            \n\x1b[0m                               'VVVVVVV\x1b[92m VVVVVV'                               \n\x1b[0m                                  'VVVV\x1b[92m VVV'                                  \n\x1b[0m                                     'V\x1b[92m '                                     \x1b[0m\n"
+)]
+
+enum Args {
+    Weapon { name: String },
+    Armor { name: String },
+    Character { class: String },
+}
 
 #[tokio::main]
 async fn main() {
-    let mut file = match File::open("resources/secret/api-key.txt") {
-        Ok(f) => f,
-        Err(_) => {
-            println!("No api key found! Are you sure it's at resources/secret/api-key.txt?");
-            return ();
-        }
-    };
+    env_logger::init();
 
-    let mut api_key = String::new();
+    let args = Args::from_args();
 
-    match file.read_to_string(&mut api_key) {
-        Ok(_) => (),
-        Err(why) => println!("Error reading key: {}", why),
-    }
-
-    let api_key = api_key.trim();
-
-    match example_req(api_key).await {
-        Ok(_) => (),
-        Err(why) => println!("Error in request: {}", why),
-    }
-}
-
-async fn example_req(api_key: &str) -> Result<(), Error> {
-    let client = reqwest::Client::new();
-
-    let result = client
-        .get(format!("{}App/FirstParty", API_ROOT))
-        .header("X-API-Key", api_key)
-        .send()
-        .await?;
-
-    let body = result.text().await?;
-
-    let json: Value = serde_json::from_str(body.as_str()).expect("Not a JSON!");
-
-    println!("{}", serde_json::to_string_pretty(&json).unwrap());
-
-    Ok(())
+    println!("{}", send_get("App/FirstParty").await);
 }
