@@ -28,6 +28,7 @@ mod display;
 )]
 
 enum Args {
+    Cache,
     Weapon {
         #[structopt(short, long)]
         id: bool,
@@ -52,15 +53,11 @@ async fn main() {
     let args = Args::from_args();
 
     match args {
+        Args::Cache => db::cache().await,
         Args::Weapon { id, name } => weapon(id, name).await,
         Args::Armor { id, name } => armor(id, name).await,
         Args::Character { id, class } => character(id, class).await,
     }
-
-    println!(
-        "{}",
-        send_get("Destiny2/Manifest").await["mobileWorldContentPaths"]["en"]
-    );
 }
 
 async fn weapon(id: bool, name: String) {}
