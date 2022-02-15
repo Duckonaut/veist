@@ -1,0 +1,1 @@
+pub fn stat_bar<T: Add<T>>()
